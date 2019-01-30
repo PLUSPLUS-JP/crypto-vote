@@ -25,26 +25,101 @@
 
 ### キャンペーン作成
 
-_campaignData
+引数
 
+string _campaignData
+:   投票キャンペーンの情報。JSONで作成する（下記参照）。
+
+uint _optionNumber
+:   選択肢の個数
+
+uint _voteStartAt
+:   投票の受付の開始タイムスタンプ
+
+uint _voteEndAt
+:   投票終了のタイムスタンプ
+
+```json
+{
+    "question": "あなたの好きな飲みものはなんですか？",
+    "options": ["お茶", "コーヒー", "オレンジジュース", "コーラ"]
+}
 ```
+
+*Javascriptでの実装例：*
+
+```js
+const data = {
+    question: 'あなたの好きな飲みものはなんですか？',
+    options: ['お茶', 'コーヒー', 'オレンジジュース', 'コーラ'],
+};
+
+const _campaignData = JSON.stringify(data);
+```
+
+*関数*
+
+```solidity
 function createCampaign(string _campaignData, uint _optionNumber, uint _voteStartAt, uint _voteEndAt) public returns (bool);
 ```
 
 ![キャンペーン作成](./sequence-diagram/create-campaign.svg)
 
+### 投票者の登録
 
-### 投票者に追加
+*引数*
 
+bytes32 _campaignId
+:   キャンペーン登録時に発行したID
+
+bytes32[] _voterHashList
+:   投稿者を特定するユニークな文字列を `getKeccak256Hash` によりハッシュ化し、それを配列で与える
+
+
+*Javascriptでの実装例：*
+
+```javascript
+const rawVoter = [ /* 投稿者を特定するユニークな文字列 */ ];
+const hashedVoter = [];
+
+for (let i = 0; i < rawVoter.length; ++i) {
+    // ハッシュ取得
+    const keccak256Hash = yield contract.methods.getKeccak256Hash(rawVoter[i]).call({});
+    hashedVoter.push(keccak256Hash);
+}
+
+const _voterHashList = JSON.stringify(hashedVoter);
 ```
-function addVoter(bytes32 _campaignId, bytes32[] _voterHashList)
+
+*関数*
+
+```solidity
+addVoter(bytes32 _campaignId, bytes32[] _voterHashList)
+        public
+        onlyCampaignOwner(_campaignId)
+        beforeVoteStart(_campaignId)
+        returns (bool);
 ```
 
 ![投票者に追加](./sequence-diagram/add-voter.svg)
 
 ### 投票
 
-```
+*引数*
+
+bytes32 _campaignId
+:   キャンペーン登録時に発行したID
+
+bytes32 _voterHash
+:   投稿者を特定するユニークな文字列
+
+uint _optionNumber
+:   投票する選択肢の番号（番号はゼロ始まり）
+
+
+*関数*
+
+```solidity
 function vote(bytes32 _campaignId, bytes32 _voterHash, uint _optionNumber) public acceptingPolling(_campaignId) returns (bool);
 ```
 
@@ -52,7 +127,14 @@ function vote(bytes32 _campaignId, bytes32 _voterHash, uint _optionNumber) publi
 
 ### 投票結果参照
 
-```
+*引数*
+
+bytes32 _campaignId
+:   キャンペーン登録時に発行したID
+
+*関数*
+
+```solidity
 function getResult(bytes32 _campaignId) public view afterVoteEnd(_campaignId) returns (uint[]);
 ```
 
@@ -63,5 +145,3 @@ function getResult(bytes32 _campaignId) public view afterVoteEnd(_campaignId) re
 実装はGitHubにて公開する。
 
 https://github.com/PLUSPLUS-JP/crypto-vote
-
-
