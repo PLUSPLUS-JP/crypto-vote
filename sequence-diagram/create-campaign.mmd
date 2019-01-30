@@ -1,0 +1,11 @@
+sequenceDiagram
+Title: キャンペーン作成
+participant OW AS オーナー
+participant DAPPS
+
+OW ->>+ OW: キャンペーンの準備
+
+OW ->>+ DAPPS: キャンペーン作成
+    DAPPS ->>+ CP: キャンペーン情報を記録
+    CP -->>- DAPPS : 応答
+DAPPS -->>- OW : 応答

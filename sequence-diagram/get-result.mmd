@@ -1,0 +1,10 @@
+sequenceDiagram
+Title: 投票結果参照
+participant HUMAN AS 照会者
+participant DAPPS
+participant RT AS 投票結果
+
+HUMAN ->>+ DAPPS: 投票結果照会
+    DAPPS ->>+ RT: 投票結果照会
+    RT -->>- DAPPS : 応答
+DAPPS -->>- HUMAN : 応答

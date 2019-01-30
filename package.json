@@ -1,0 +1,22 @@
+{
+  "name": "crypto-vote",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "SAWADA Osamu <o.sawada@plusplus.jp>",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "mermaid": "^8.0.0",
+    "mermaid.cli": "^0.5.1",
+    "truffle-hdwallet-provider": "^1.0.2",
+    "zeppelin-solidity": "^1.12.0"
+  }
+}
