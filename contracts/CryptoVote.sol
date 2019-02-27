@@ -8,9 +8,6 @@ pragma solidity >=0.4.21<0.6.0;
 // https://www.plusplus.jp/
 // ---------------------------------------------
 
-//
-// Data identity verification
-//
 contract CryptoVote {
     // 投票キャンペーン
     struct Campaign {
