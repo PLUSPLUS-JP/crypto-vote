@@ -86,6 +86,16 @@ contract CryptoVote {
     }
 
     // ***********************************
+    // 投票終了前であること
+    // ***********************************
+    modifier beforeVoteEnd(bytes32 _campaignId) {
+        require(isExist(_campaignId) == true, NO_DATA);
+        uint ts = block.timestamp;
+        require(ts < CampaignList[_campaignId].voteEndAt);
+        _;
+    }
+
+    // ***********************************
     // 投票締め切り後であること
     // ***********************************
     modifier afterVoteEnd(bytes32 _campaignId) {
@@ -164,11 +174,11 @@ contract CryptoVote {
     // ***********************************
     // campaign作成
     // ***********************************
-    function createCampaign(string _campaignData, uint _optionNumber, uint _voteStartAt, uint _voteEndAt) public returns (bool) {
+    function createCampaign(string _campaignData, uint _optionNumber, uint _voteStartAt, uint _voteEndAt) public onlyOwner returns (bool) {
         uint ts = block.timestamp;
 
         // voteStartAtが未来日であること
-        //        require(ts < _voteStartAt);
+        require(ts < _voteStartAt);
 
         // voteStartAt < voteEndAt であること
         require(_voteStartAt < _voteEndAt);
@@ -218,14 +228,9 @@ contract CryptoVote {
     // -----------------------------------
     // 【条件】
     // キャンペーンのオーナーであること
-    // 投票開始前であること
+    // 投票期限前であること
     // ***********************************
-    function addVoter(bytes32 _campaignId, bytes32[] _voterHashList)
-        public
-        onlyCampaignOwner(_campaignId)
-        beforeVoteStart(_campaignId)
-        returns (bool)
-    {
+    function addVoter(bytes32 _campaignId, bytes32[] _voterHashList) public onlyCampaignOwner(_campaignId) beforeVoteEnd(_campaignId) returns (bool) {
         require(_voterHashList.length <= 100);
 
         uint256 newVoters = 0;
@@ -274,19 +279,9 @@ contract CryptoVote {
     // 投票結果参照
     // -----------------------------------
     // 【条件】
-    // 投票期間終了後
+    // なし
     // ***********************************
-    function getResult(bytes32 _campaignId) public view afterVoteEnd(_campaignId) returns (uint[]) {
-        return RecordList[_campaignId];
-    }
-
-    // ***********************************
-    // 投票結果参照
-    // -----------------------------------
-    // 【条件】
-    // campaignのオーナーであること
-    // ***********************************
-    function getResultForOwner(bytes32 _campaignId) public view onlyCampaignOwner(_campaignId) returns (uint[]) {
+    function getResult(bytes32 _campaignId) public view returns (uint[]) {
         return RecordList[_campaignId];
     }
 
