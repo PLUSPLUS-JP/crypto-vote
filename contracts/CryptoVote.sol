@@ -117,6 +117,11 @@ contract CryptoVote {
     event NewCampaign(address indexed _from, bytes32 _campaignId, string _campaignData, uint _voteStartAt, uint _voteEndAt);
 
     // ***********************************
+    // キャンペーン削除
+    // ***********************************
+    event DeletedCampaign(address indexed _from, bytes32 _campaignId);
+
+    // ***********************************
     // 投票
     // ***********************************
     event Vote(address indexed _from, bytes32 _campaignId, bytes32 _voterId, uint _optionNumber, uint _timestamp);
@@ -174,7 +179,7 @@ contract CryptoVote {
     // ***********************************
     // campaign作成
     // ***********************************
-    function createCampaign(string _campaignData, uint _optionNumber, uint _voteStartAt, uint _voteEndAt) public onlyOwner returns (bool) {
+    function createCampaign(string _campaignData, uint _optionNumber, uint _voteStartAt, uint _voteEndAt) public returns (bool) {
         uint ts = block.timestamp;
 
         // voteStartAtが未来日であること
@@ -205,6 +210,22 @@ contract CryptoVote {
 
         // 通知
         emit NewCampaign(msg.sender, _campaignId, _campaignData, _voteStartAt, _voteEndAt);
+
+        return true;
+    }
+
+    // ***********************************
+    // campaign削除
+    // ***********************************
+    function deleteCampaign(bytes32 _campaignId) public onlyOwner returns (bool) {
+        CampaignList[_campaignId].isExist = false;
+        CampaignList[_campaignId].campaignData = "";
+        CampaignList[_campaignId].voteStartAt = 0;
+        CampaignList[_campaignId].voteEndAt = 0;
+        CampaignList[_campaignId].createdAt = 0;
+
+        // 通知
+        emit DeletedCampaign(msg.sender, _campaignId);
 
         return true;
     }
@@ -282,6 +303,7 @@ contract CryptoVote {
     // なし
     // ***********************************
     function getResult(bytes32 _campaignId) public view returns (uint[]) {
+        require(isExist(_campaignId) == true);
         return RecordList[_campaignId];
     }
 
