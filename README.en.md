@@ -37,8 +37,8 @@ uint _voteEndAt: Time stamp for end of voting
 
 ```json
 {
-    "question": "あなたの好きな飲みものはなんですか？",
-    "options": ["お茶", "コーヒー", "オレンジジュース", "コーラ"]
+    "question": "What is your favorite drink?",
+    "options": ["tea", "coffee", "orange juice", "cola"]
 }
 ```
 
@@ -46,8 +46,8 @@ uint _voteEndAt: Time stamp for end of voting
 
 ```js
 const data = {
-    question: 'あなたの好きな飲みものはなんですか？',
-    options: ['お茶', 'コーヒー', 'オレンジジュース', 'コーラ'],
+    question: 'What is your favorite drink?',
+    options: ['tea', 'coffee', 'orange juice', 'cola'],
 };
 
 const _campaignData = JSON.stringify(data);
@@ -72,11 +72,11 @@ bytes32 [] _voterHashList: `getKeccak256Hash` hashes a unique string identifying
 *Javascript implementation example:*
 
 ```javascript
-const rawVoter = [ /* 投稿者を特定するユニークな文字列 */ ];
+const rawVoter = [ /* Unique string to identify the poster */ ];
 const hashedVoter = [];
 
 for (let i = 0; i < rawVoter.length; ++i) {
-    // ハッシュ取得
+    // Get hash
     const keccak256Hash = yield contract.methods.getKeccak256Hash(rawVoter[i]).call({});
     hashedVoter.push(keccak256Hash);
 }
