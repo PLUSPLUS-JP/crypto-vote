@@ -1,5 +1,7 @@
 # Implement a voting system with a smart contract
 
+*Read this in other languages: [English](README.md), [日本語](README.ja.md).*
+
 ## Overview
 
 Implement a voting system using a smart contract
