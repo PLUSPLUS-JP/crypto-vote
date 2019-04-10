@@ -1,4 +1,4 @@
-pragma solidity >=0.4.21<0.6.0;
+pragma solidity ^0.5.0;
 
 // ---------------------------------------------
 // CryptoVote.sol
@@ -9,96 +9,31 @@ pragma solidity >=0.4.21<0.6.0;
 // ---------------------------------------------
 
 contract CryptoVote {
-    // 投票キャンペーン
-    struct Campaign {
-        //キャンペーンハッシュID（内部生成）
-        bytes32 campaignId;
-        // Campaignの情報のJSON文字列
-        string campaignData;
-        // 選択肢の数
-        uint optionNumber;
-        // 投票開始タイムスタンプ
-        // Voting start timestamp
-        uint voteStartAt;
-        //投票終了タイムスタンプ
-        // Voting end timestamp
-        uint voteEndAt;
-        // 投票者リストを保持する
-        mapping(bytes32 => bool) voters;
-        // 投票済みリストを保持する
-        mapping(bytes32 => bool) votedList;
-        // campaign登録者
-        address campaignOwner;
-        // campaign登録日時
+    struct Questionnaire {
+        bytes32 id;
+        bytes contentsData;
+        uint numberOfChoices;
+        uint voteStartAt; // Voting start timestamp
+        uint voteEndAt; // Voting end timestamp
+        mapping(address => bool) votedList; // Voter list
+        address organizer;
         uint createdAt;
         bool isExist;
     }
 
-    // Owner of Smart Contract
-    // スマートコントラクトのオーナー
     address public owner;
+    mapping(bytes32 => Questionnaire) public QuestionnaireList;
+    mapping(bytes32 => uint[]) private ResultList;
 
-    // Keep a list of hashes
-    // ハッシュの一覧を保持する
-    mapping(bytes32 => Campaign) public CampaignList;
-
-    // 投票結果を保持する
-    mapping(bytes32 => uint[]) private RecordList;
-
-    // ***********************************
-    // スマートコントラクトのオーナーであること
-    // ***********************************
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the owner is available.");
         _;
     }
 
-    // ***********************************
-    // 投票キャンペーンのオーナーであること
-    // ***********************************
-    modifier onlyCampaignOwner(bytes32 _campaignId) {
-        require(isExist(_campaignId) == true, NO_DATA);
-        require(msg.sender == CampaignList[_campaignId].campaignOwner, "Only the owner is available.");
-        _;
-    }
-
-    // ***********************************
-    // 投票受付中であること
-    // ***********************************
-    modifier acceptingPolling(bytes32 _campaignId) {
-        require(isExist(_campaignId) == true, NO_DATA);
+    modifier acceptingVoting(bytes32 _id) {
+        require(isExist(_id) == true, NO_DATA);
         uint ts = block.timestamp;
-        require(CampaignList[_campaignId].voteStartAt <= ts && ts <= CampaignList[_campaignId].voteEndAt, "Outside the voting period");
-        _;
-    }
-
-    // ***********************************
-    // 投票開始前であること
-    // ***********************************
-    modifier beforeVoteStart(bytes32 _campaignId) {
-        require(isExist(_campaignId) == true, NO_DATA);
-        uint ts = block.timestamp;
-        require(ts < CampaignList[_campaignId].voteStartAt);
-        _;
-    }
-
-    // ***********************************
-    // 投票終了前であること
-    // ***********************************
-    modifier beforeVoteEnd(bytes32 _campaignId) {
-        require(isExist(_campaignId) == true, NO_DATA);
-        uint ts = block.timestamp;
-        require(ts < CampaignList[_campaignId].voteEndAt);
-        _;
-    }
-
-    // ***********************************
-    // 投票締め切り後であること
-    // ***********************************
-    modifier afterVoteEnd(bytes32 _campaignId) {
-        require(isExist(_campaignId) == true, NO_DATA);
-        uint ts = block.timestamp;
-        require(CampaignList[_campaignId].voteEndAt <= ts);
+        require(QuestionnaireList[_id].voteStartAt <= ts && ts <= QuestionnaireList[_id].voteEndAt, "Outside the voting period");
         _;
     }
 
@@ -108,49 +43,18 @@ contract CryptoVote {
 
     // Events
 
-    // ***********************************
-    // キャンペーン作成
-    // ***********************************
-    event NewCampaign(address indexed _from, bytes32 _campaignId, string _campaignData, uint _voteStartAt, uint _voteEndAt);
+    event NewQuestionnaire(bytes32 _id, bytes _contentsData, uint _voteStartAt, uint _voteEndAt);
+    event Canceled(bytes32 _id);
+    event Vote(address indexed _from, bytes32 _id, uint _choice, uint _timestamp);
 
-    // ***********************************
-    // キャンペーン削除
-    // ***********************************
-    event DeletedCampaign(address indexed _from, bytes32 _campaignId);
-
-    // ***********************************
-    // 投票
-    // ***********************************
-    event Vote(address indexed _from, bytes32 _campaignId, bytes32 _voterId, uint _optionNumber, uint _timestamp);
-
-    // ***********************************
-    // 投票者追加
-    // ***********************************
-    event AddVoter(address indexed _from, bytes32 _campaignId, uint256 _newVoters);
-
-    // ***********************************
-    // コンストラクタ
-    // ***********************************
     constructor() public {
         // The owner address is maintained.
         owner = msg.sender;
     }
 
-    // ***********************************
-    // Obtain a hash value
-    // ハッシュ値を得る
-    // ***********************************
-    function getKeccak256Hash(string _sha3hash) public pure returns (bytes32) {
-        bytes32 keccak256hash = keccak256(abi.encodePacked(_sha3hash));
-        return keccak256hash;
-    }
-
-    // ***********************************
-    // campaign existence check
-    // キャンペーン存在チェック
-    // ***********************************
-    function isExist(bytes32 _campaignId) public view returns (bool) {
-        if (CampaignList[_campaignId].isExist == true) {
+    // @title questionnaire existence check
+    function isExist(bytes32 _id) public view returns (bool) {
+        if (QuestionnaireList[_id].isExist == true) {
             // exist
             return true;
         } else {
@@ -159,158 +63,79 @@ contract CryptoVote {
         }
     }
 
-    // ***********************************
-    // Whether you are the owner of the campaign
-    // あなたがキャンペーンの登録者であるか
-    // ***********************************
-    function areYouCampaignOwner(bytes32 _campaignId) public view returns (bool) {
-        require(isExist(_campaignId) == true, NO_DATA);
-
-        if (msg.sender == CampaignList[_campaignId].campaignOwner) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    // ***********************************
-    // campaign作成
-    // ***********************************
-    function createCampaign(string _campaignData, uint _optionNumber, uint _voteStartAt, uint _voteEndAt) public returns (bool) {
+    // @title Create a questionnaire
+    function create(string memory _contents, uint _numberOfChoices, uint _voteStartAt, uint _voteEndAt) public onlyOwner returns (bool) {
         uint ts = block.timestamp;
 
-        // voteStartAtが未来日であること
-        require(ts < _voteStartAt);
+        // voteStartAt must be the future.
+        require(ts < _voteStartAt, "StartAt must be the future.");
 
-        // voteStartAt < voteEndAt であること
-        require(_voteStartAt < _voteEndAt);
+        // The order of start and end must be correct.
+        require(_voteStartAt < _voteEndAt, "The order of start and end must be correct.");
 
-        // voteEndAt - voteStartAt が1分以上あること
-        require(_voteEndAt - _voteStartAt >= 1 minutes);
+        // A minimum voting period of 1 minute is required.
+        require(_voteEndAt - _voteStartAt >= 1 minutes, "A minimum voting period of 1 minute is required.");
 
-        bytes32 _campaignId = getKeccak256Hash(_campaignData);
+        bytes32 _id = keccak256(abi.encodePacked(_contents));
 
-        // 同じものが存在しないこと
-        require(isExist(_campaignId) == false);
+        require(isExist(_id) == false);
 
-        CampaignList[_campaignId].isExist = true;
-        CampaignList[_campaignId].campaignId = _campaignId;
-        CampaignList[_campaignId].campaignData = _campaignData;
-        CampaignList[_campaignId].optionNumber = _optionNumber;
-        CampaignList[_campaignId].voteStartAt = _voteStartAt;
-        CampaignList[_campaignId].voteEndAt = _voteEndAt;
-        CampaignList[_campaignId].campaignOwner = msg.sender;
-        CampaignList[_campaignId].createdAt = ts;
+        QuestionnaireList[_id].isExist = true;
+        QuestionnaireList[_id].id = _id;
+        QuestionnaireList[_id].contentsData = bytes(_contents);
+        QuestionnaireList[_id].numberOfChoices = _numberOfChoices;
+        QuestionnaireList[_id].voteStartAt = _voteStartAt;
+        QuestionnaireList[_id].voteEndAt = _voteEndAt;
+        QuestionnaireList[_id].createdAt = ts;
 
-        // 投票結果の初期化
-        RecordList[_campaignId].length = _optionNumber;
+        ResultList[_id].length = _numberOfChoices;
 
-        // 通知
-        emit NewCampaign(msg.sender, _campaignId, _campaignData, _voteStartAt, _voteEndAt);
+        emit NewQuestionnaire(_id, bytes(_contents), _voteStartAt, _voteEndAt);
 
         return true;
     }
 
-    // ***********************************
-    // campaign削除
-    // ***********************************
-    function deleteCampaign(bytes32 _campaignId) public onlyOwner returns (bool) {
-        CampaignList[_campaignId].isExist = false;
-        CampaignList[_campaignId].campaignData = "";
-        CampaignList[_campaignId].voteStartAt = 0;
-        CampaignList[_campaignId].voteEndAt = 0;
-        CampaignList[_campaignId].createdAt = 0;
+    // @title cancel questionnaire
+    function cancel(bytes32 _id) public onlyOwner returns (bool) {
+        QuestionnaireList[_id].isExist = false;
+        QuestionnaireList[_id].contentsData = "";
+        QuestionnaireList[_id].voteStartAt = 0;
+        QuestionnaireList[_id].voteEndAt = 0;
+        QuestionnaireList[_id].createdAt = 0;
 
-        // 通知
-        emit DeletedCampaign(msg.sender, _campaignId);
+        ResultList[_id].length = 0;
 
-        return true;
-    }
-
-    // ***********************************
-    // 投票者IDが存在するか
-    // ***********************************
-    function existVoterId(bytes32 _campaignId, bytes32 _voterHash) public view returns (bool) {
-        return CampaignList[_campaignId].voters[_voterHash];
-    }
-
-    // ***********************************
-    // 投票済みか
-    // ***********************************
-    function isVoted(bytes32 _campaignId, bytes32 _voterHash) public view returns (bool) {
-        return CampaignList[_campaignId].votedList[_voterHash];
-    }
-
-    // ***********************************
-    // 投票者の追加
-    // -----------------------------------
-    // 【条件】
-    // キャンペーンのオーナーであること
-    // 投票期限前であること
-    // ***********************************
-    function addVoter(bytes32 _campaignId, bytes32[] _voterHashList) public onlyCampaignOwner(_campaignId) beforeVoteEnd(_campaignId) returns (bool) {
-        require(_voterHashList.length <= 100);
-
-        uint256 newVoters = 0;
-
-        for (uint i = 0; i < _voterHashList.length; ++i) {
-            if (existVoterId(_campaignId, _voterHashList[i])) {
-                continue;
-            }
-
-            CampaignList[_campaignId].voters[_voterHashList[i]] = true;
-            ++newVoters;
-        }
-
-        emit AddVoter(msg.sender, _campaignId, newVoters);
+        emit Canceled(_id);
 
         return true;
     }
 
-    // ***********************************
-    // 投票
-    // -----------------------------------
-    // 【条件】
-    // 投票期間中であること
-    // ***********************************
-    function vote(bytes32 _campaignId, bytes32 _voterHash, uint _optionNumber) public acceptingPolling(_campaignId) returns (bool) {
-        // 投票権があること
-        require(existVoterId(_campaignId, _voterHash) == true, "投票権がありません");
+    // @title Determine if the user has voted
+    function isVoted(bytes32 _id) public view returns (bool) {
+        return QuestionnaireList[_id].votedList[msg.sender];
+    }
 
-        // 未投票であること
-        require(isVoted(_campaignId, _voterHash) == false, "投票済みです");
+    // @title vote
+    function vote(bytes32 _id, uint _choice) public acceptingVoting(_id) returns (bool) {
+        require(isVoted(_id) == false, "You have already voted");
 
         uint ts = block.timestamp;
 
-        // 投票済みに変更
-        CampaignList[_campaignId].votedList[_voterHash] = true;
+        // Mark as voted
+        QuestionnaireList[_id].votedList[msg.sender] = true;
 
-        // 一票加算
-        RecordList[_campaignId][_optionNumber]++;
+        // vote
+        ResultList[_id][_choice]++;
 
-        emit Vote(msg.sender, _campaignId, _voterHash, _optionNumber, ts);
+        emit Vote(msg.sender, _id, _choice, ts);
 
         return true;
     }
 
-    // ***********************************
-    // 投票結果参照
-    // -----------------------------------
-    // 【条件】
-    // なし
-    // ***********************************
-    function getResult(bytes32 _campaignId) public view returns (uint[]) {
-        require(isExist(_campaignId) == true);
-        return RecordList[_campaignId];
-    }
-
-    // ---------------------------------------------
-    // Destruction of a contract (only owner)
-    // ---------------------------------------------
-    function destory(string _delete_me) public onlyOwner {
-        // Delete by giving keyword
-        require(getKeccak256Hash("delete me") == getKeccak256Hash(_delete_me), "The keywords do not match.");
-        selfdestruct(owner);
+    // @title Return the result
+    function getResult(bytes32 _questionnaireId) public view returns (uint[] memory) {
+        require(isExist(_questionnaireId) == true);
+        return ResultList[_questionnaireId];
     }
 
 }
