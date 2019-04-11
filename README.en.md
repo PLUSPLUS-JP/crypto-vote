@@ -1,6 +1,6 @@
 # Mechanism for creating questionnaires in blockchain and accepting votes
 
-*Read this in other languages: [English](README.en.md) , [Japanese](README.ja.md) .*
+*Read this in other languages: [English](README.en.md) , [日本語](README.ja.md) .*
 
 ## Overview
 
@@ -41,7 +41,7 @@ Because information is recorded in the block chain, there is no concern such as 
 ```js
 const data = {
     question: 'What's your favorite drink?',
-    options: [' tea ',' coffee ',' orange juice ',' cola '],
+    options: ['tea', 'coffee', 'orange juice', 'cola'],
 };
 
 const _contents = JSON.stringify(data);
