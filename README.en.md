@@ -31,8 +31,8 @@ Because information is recorded in the block chain, there is no concern such as 
 
 ```json
 {
-    "question": "あなたの好きな飲みものはなんですか？",
-    "options": ["お茶", "コーヒー", "オレンジジュース", "コーラ"]
+    "question": "What is your favorite drink?",
+    "options": ["tea", "coffee", "orange juice", "cola"]
 }
 ```
 
@@ -40,8 +40,8 @@ Because information is recorded in the block chain, there is no concern such as 
 
 ```js
 const data = {
-    question: 'あなたの好きな飲みものはなんですか？',
-    options: ['お茶', 'コーヒー', 'オレンジジュース', 'コーラ'],
+    question: 'What's your favorite drink?',
+    options: [' tea ',' coffee ',' orange juice ',' cola '],
 };
 
 const _contents = JSON.stringify(data);
