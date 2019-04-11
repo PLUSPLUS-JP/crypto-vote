@@ -1,22 +1,24 @@
 sequenceDiagram
 Title: 投票
 participant Voter AS 投票者
-participant DAPPS
-participant CP as キャンペーンのリスト
-participant VT AS 投票者のリスト
+participant DAPPS AS Contract
+participant CP as アンケートのリスト
+participant VT AS 投票済のリスト
 participant RT AS 投票結果
 
 Voter ->>+ Voter: どれに投票するか決める
 
 Voter ->>+ DAPPS: 投票
 
-    DAPPS ->>+ CP: キャンペーンの確認
-    CP -->>- DAPPS : result
+    DAPPS ->>+ CP: アンケートの有効性の確認
+    CP -->>- DAPPS : 応答
 
-    DAPPS ->>+ VT: 投票者の確認
+    DAPPS ->>+ VT: 未投票であることの確認
     VT -->>- DAPPS : 応答
 
-    DAPPS ->>+ RT: 投票結果を保管
+    DAPPS ->>+ RT: 投票結果を記録
     RT -->>- DAPPS : 応答
 
 DAPPS -->>- Voter : 応答
+
+

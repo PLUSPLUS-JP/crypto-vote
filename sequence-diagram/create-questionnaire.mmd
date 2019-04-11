@@ -1,11 +1,12 @@
 sequenceDiagram
-Title: キャンペーン作成
+Title: アンケート作成
 participant OW AS オーナー
-participant DAPPS
+participant DAPPS AS Contract
+participant CP AS アンケート情報
 
-OW ->>+ OW: キャンペーンの準備
+OW ->>+ OW: アンケートの準備
 
-OW ->>+ DAPPS: キャンペーン作成
-    DAPPS ->>+ CP: キャンペーン情報を記録
+OW ->>+ DAPPS: アンケート作成
+    DAPPS ->>+ CP: アンケートを登録
     CP -->>- DAPPS : 応答
 DAPPS -->>- OW : 応答
