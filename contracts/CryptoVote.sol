@@ -133,9 +133,9 @@ contract CryptoVote {
     }
 
     // @title Return the result
-    function getResult(bytes32 _questionnaireId) public view returns (uint[] memory) {
-        require(isExist(_questionnaireId) == true);
-        return ResultList[_questionnaireId];
+    function getResult(bytes32 _id) public view returns (uint[] memory) {
+        require(isExist(_id) == true);
+        return ResultList[_id];
     }
 
 }
