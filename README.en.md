@@ -40,7 +40,7 @@ Because information is recorded in the block chain, there is no concern such as 
 
 ```js
 const data = {
-    question: 'What's your favorite drink?',
+    question: "What's your favorite drink?",
     options: ['tea', 'coffee', 'orange juice', 'cola'],
 };
 
