@@ -102,13 +102,16 @@ contract CryptoVote {
 
     // @title cancel questionnaire
     function cancel(bytes32 _id) public onlyOwner returns (bool) {
+        require(isExist(_id) == true);
         QuestionnaireList[_id].isExist = false;
         QuestionnaireList[_id].contentsData = "";
+        QuestionnaireList[_id].numberOfChoices = 0;
         QuestionnaireList[_id].voteStartAt = 0;
         QuestionnaireList[_id].voteEndAt = 0;
         QuestionnaireList[_id].createdAt = 0;
 
         ResultList[_id].length = 0;
+        VoteLogList[_id] = VoteLog();
 
         emit Canceled(_id);
 
