@@ -21,9 +21,14 @@ contract CryptoVote {
         bool isExist;
     }
 
+    struct VoteLog {
+        mapping(address => uint) choice;
+    }
+
     address public owner;
     mapping(bytes32 => Questionnaire) public QuestionnaireList;
     mapping(bytes32 => uint[]) private ResultList;
+    mapping(bytes32 => VoteLog) private VoteLogList;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the owner is available.");
@@ -126,6 +131,7 @@ contract CryptoVote {
 
         // vote
         ResultList[_id][_choice]++;
+        VoteLogList[_id].choice[msg.sender] = _choice;
 
         emit Vote(msg.sender, _id, _choice, ts);
 
@@ -136,6 +142,13 @@ contract CryptoVote {
     function getResult(bytes32 _id) public view returns (uint[] memory) {
         require(isExist(_id) == true);
         return ResultList[_id];
+    }
+
+    // @title Return the result
+    function getYourResult(bytes32 _id) public view returns (uint) {
+        require(isExist(_id) == true);
+        require(isVoted(_id) == true);
+        return VoteLogList[_id].choice[msg.sender];
     }
 
 }
